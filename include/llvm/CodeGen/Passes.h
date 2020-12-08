@@ -209,11 +209,6 @@ public:
     return true;
   }
 
-  /// addSerializePass - Install a pass that serializes the internal representation
-  /// of the compiler to PML format
-  virtual bool addSerializePass(std::string& OutFile, ArrayRef<std::string> Roots,
-                                std::string &BitcodeFile, bool SerializeAll);
-
   /// Add the complete, standard set of LLVM CodeGen passes.
   /// Fully developed targets will not generally override this.
   virtual void addMachinePasses();
@@ -374,11 +369,6 @@ namespace llvm {
   createMachineFunctionPrinterPass(raw_ostream &OS,
                                    const std::string &Banner ="");
 
-  /// PMLExport pass - this pass exports the internal LLVM information (machinecode)
-  /// to the given stream in PML format
-  MachineModulePass *
-  createPMLExportPass(TargetMachine &TM, std::string& FileName, std::string& BitcodeFile,
-                      ArrayRef<std::string> Roots, bool SerializeAll);
 
   /// MachineLoopInfo - This pass is a loop analysis pass.
   extern char &MachineLoopInfoID;

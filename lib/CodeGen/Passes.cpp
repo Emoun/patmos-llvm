@@ -78,18 +78,6 @@ static cl::opt<bool> PrintGCInfo("print-gc", cl::Hidden,
 static cl::opt<bool> VerifyMachineCode("verify-machineinstrs", cl::Hidden,
     cl::desc("Verify generated machine code"),
     cl::init(getenv("LLVM_VERIFY_MACHINEINSTRS")!=NULL));
-static cl::opt<std::string> SerializeMachineCode("mserialize",
-   cl::desc("Export PML specification of generated machine code to FILE"),
-   cl::init(""));
-static cl::list<std::string>SerializeRoots("mserialize-roots",
-   cl::desc("Export only methods reachable from given functions"),
-   cl::CommaSeparated, cl::Hidden);
-static cl::opt<bool> SerializeMachineCodeAll("mserialize-all",
-   cl::desc("Export PML specification for all generated functions"),
-   cl::init(false));
-static cl::opt<std::string> SerializePreemitBitcode("mpreemit-bitcode",
-  cl::desc("Write the final bitcode representation (before emit) to FILE"),
-  cl::init(""));
 static cl::opt<std::string>
 PrintMachineInstrs("print-machineinstrs", cl::ValueOptional,
                    cl::desc("Print machine instrs"),
@@ -550,16 +538,6 @@ void TargetPassConfig::addMachinePasses() {
   if (addPreEmitPass())
     printAndVerify("After PreEmit passes");
 
-  // Serialize machine code
-  if (! SerializeMachineCode.empty())
-    addSerializePass(SerializeMachineCode, SerializeRoots, SerializePreemitBitcode, SerializeMachineCodeAll);
-}
-
-/// Add standard serialization to PML format
-bool TargetPassConfig::addSerializePass(std::string& OutFile, ArrayRef<std::string> Roots, std::string &BitcodeFile, bool SerializeAll)
-{
-  addPass(createPMLExportPass(*TM, OutFile, BitcodeFile, Roots, SerializeAll));
-  return true;
 }
 
 /// Add passes that optimize machine instructions in SSA form.

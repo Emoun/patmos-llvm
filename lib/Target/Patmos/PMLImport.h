@@ -14,13 +14,16 @@
 #ifndef LLVM_CODEGEN_PMLIMPORT_H
 #define LLVM_CODEGEN_PMLIMPORT_H
 
+#include "Patmos.h"
+#include "PML.h"
 #include "llvm/Pass.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
-#include "llvm/PML.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/ValueMap.h"
 
 namespace llvm {
+
+  void initializePMLImportPass(PassRegistry&);
 
   class  MachineDominatorTree;
   struct MachinePostDominatorTree;

@@ -30,7 +30,7 @@ namespace llvm {
   void initializePatmosCallGraphBuilderPass(PassRegistry&);
   void initializePatmosStackCacheAnalysisInfoPass(PassRegistry&);
   void initializePatmosPostRASchedulerPass(PassRegistry&);
-  void initializePatmosPMLProfileImportPasS(PassRegistry&);
+  void initializePMLMachineFunctionImportPass(PassRegistry&);
 
   FunctionPass *createPatmosISelDag(PatmosTargetMachine &TM);
   ModulePass   *createPatmosSPClonePass();
@@ -53,9 +53,7 @@ namespace llvm {
 
   ModulePass *createPatmosModuleExportPass(PatmosTargetMachine &TM,
                                            std::string& Filename,
-                                           std::string& BitcodeFilename,
-                                           ArrayRef<std::string> Roots,
-					   bool SerializeAll);
+                                           ArrayRef<std::string> DefaultRoots);
   ModulePass *createPatmosCallGraphBuilder();
   ModulePass *createPatmosStackCacheAnalysis(const PatmosTargetMachine &tm);
   ModulePass *createPatmosStackCacheAnalysisInfo(const PatmosTargetMachine &tm);

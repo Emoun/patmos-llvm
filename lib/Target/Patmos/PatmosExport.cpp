@@ -20,6 +20,7 @@
 #include "PatmosStackCacheAnalysis.h"
 #include "PatmosTargetMachine.h"
 #include "PatmosUtil.h"
+#include "PMLExport.h"
 #include "InstPrinter/PatmosInstPrinter.h"
 #include "llvm/IR/Function.h"
 #include "llvm/CodeGen/Analysis.h"
@@ -29,7 +30,6 @@
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
-#include "llvm/CodeGen/PMLExport.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -47,6 +47,15 @@ static cl::opt<bool> LongSerialize (
   cl::init(false),
   cl::desc("Export more detailed descriptions."),
   cl::Hidden);
+static cl::list<std::string>SerializeRoots("mserialize-roots",
+   cl::desc("Export only methods reachable from given functions"),
+   cl::CommaSeparated, cl::Hidden);
+static cl::opt<bool> SerializeMachineCodeAll("mserialize-all",
+   cl::desc("Export PML specification for all generated functions"),
+   cl::init(false));
+static cl::opt<std::string> SerializePreemitBitcode("mpreemit-bitcode",
+  cl::desc("Write the final bitcode representation (before emit) to FILE"),
+  cl::init(""));
 
 
 namespace llvm {
@@ -318,8 +327,8 @@ namespace llvm {
 
   public:
     PatmosModuleExportPass(PatmosTargetMachine &tm, StringRef filename,
-                           ArrayRef<std::string> roots, bool SerializeAll)
-      : PMLModuleExportPass(ID, tm, filename, roots, SerializeAll)
+                           ArrayRef<std::string> roots)
+      : PMLModuleExportPass(ID, tm, filename, roots, SerializeMachineCodeAll)
     {
       initializePatmosCallGraphBuilderPass(*PassRegistry::getPassRegistry());
 
@@ -355,19 +364,18 @@ namespace llvm {
   /// \see PatmosExportPass
   ModulePass *createPatmosModuleExportPass(PatmosTargetMachine &TM,
                                            std::string& Filename,
-                                           std::string& BitcodeFilename,
-                                           ArrayRef<std::string> Roots,
-					   bool SerializeAll)
+                                           ArrayRef<std::string> DefaultRoots)
   {
+    auto Roots = SerializeRoots.empty() ? DefaultRoots : SerializeRoots;
     PatmosModuleExportPass *PEP =
-                      new PatmosModuleExportPass(TM, Filename, Roots, SerializeAll);
+                      new PatmosModuleExportPass(TM, Filename, Roots);
 
     // Add our own export passes
     PEP->addExporter( new PatmosMachineExport(TM, *PEP, PEP->getPatmosInstrInfo()));
     PEP->addExporter( new PatmosBitcodeExport(TM, *PEP) );
     PEP->addExporter( new PMLRelationGraphExport(TM, *PEP) );
-    if (! BitcodeFilename.empty())
-      PEP->writeBitcode(BitcodeFilename);
+    if (! SerializePreemitBitcode.empty())
+      PEP->writeBitcode(SerializePreemitBitcode);
     return PEP;
   }
 

@@ -63,6 +63,10 @@ namespace {
       cl::init(false),
       cl::desc("Disable if-converter for Patmos."),
       cl::Hidden);
+  static cl::opt<std::string> SerializeMachineCode("mserialize",
+     cl::desc("Export PML specification of generated machine code to FILE"),
+     cl::init(""));
+
 
   /// Patmos Code Generator Pass Configuration Options.
   class PatmosPassConfig : public TargetPassConfig {
@@ -149,6 +153,8 @@ namespace {
     /// scheduling pass.  This should return true if -print-machineinstrs should
     /// print after these passes.
     virtual bool addPreSched2() {
+
+      initializePMLMachineFunctionImportPass(*PassRegistry::getPassRegistry());
       addPass(createPatmosPMLProfileImport(getPatmosTargetMachine()));
 
       if (PatmosSinglePathInfo::isEnabled()) {
@@ -217,26 +223,14 @@ namespace {
       // the control structure nor the size of basic blocks.
       addPass(createPatmosBypassFromPMLPass(getPatmosTargetMachine()));
 
-      return true;
-    }
-
-    /// addSerializePass - Install a pass that serializes the internal representation
-    /// of the compiler to PML format
-    virtual bool addSerializePass(std::string& OutFile,
-                                  ArrayRef<std::string> Roots,
-                                  std::string &BitcodeFile,
-				  bool SerializeAll) {
-      if (OutFile.empty())
-        return false;
-
-
-      addPass(createPatmosModuleExportPass(
-          getPatmosTargetMachine(),
-          OutFile, BitcodeFile,
-          Roots.empty() ? ArrayRef<std::string>(DefaultRoot) : Roots,
-	  SerializeAll
-          ));
-
+      // Install a pass that serializes the internal representation
+      // of the compiler to PML format
+      if (!SerializeMachineCode.empty()) {
+	addPass(createPatmosModuleExportPass(
+	    getPatmosTargetMachine(),
+	    SerializeMachineCode,
+	    ArrayRef<std::string>(DefaultRoot) ));
+       }
       return true;
     }
 

@@ -10,15 +10,31 @@
 #ifndef LLVM_CODEGEN_PML_EXPORT_H_
 #define LLVM_CODEGEN_PML_EXPORT_H_
 
+#include "PML.h"
 #include "llvm/IR/Module.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/ValueMap.h"
+#include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineModulePass.h"
-#include "llvm/PML.h"
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/YAMLTraits.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/Module.h"
+#include "llvm/Bitcode/ReaderWriter.h"
+#include "llvm/ADT/Statistic.h"
+#include "llvm/Analysis/LoopInfo.h"
+#include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/Analysis/ScalarEvolutionExpressions.h"
+#include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/MachineFunctionPass.h"
+#include "llvm/CodeGen/MachineLoopInfo.h"
+#include "llvm/CodeGen/MachineMemOperand.h"
+#include "llvm/CodeGen/MachineModuleInfo.h"
+#include "llvm/CodeGen/MachineRegisterInfo.h"
 
 #include <list>
 
@@ -336,6 +352,13 @@ namespace llvm {
     void addToQueue(MachineFunction *MF);
 
   };
+
+
+  /// PMLExport pass - this pass exports the internal LLVM information (machinecode)
+  /// to the given stream in PML format
+  MachineModulePass *
+  createPMLExportPass(TargetMachine &TM, std::string& FileName, std::string& BitcodeFile,
+                      ArrayRef<std::string> Roots, bool SerializeAll);
 
 } // end namespace llvm
 

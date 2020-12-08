@@ -11,12 +11,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "pml-import"
+#define DEBUG_TYPE "patmos-pml-import"
 
+#include "PMLImport.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
-#include "llvm/CodeGen/PMLImport.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachinePostDominators.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -35,7 +35,7 @@ using namespace llvm;
 static cl::list<std::string> ImportFiles("mimport-pml",
    cl::desc("Read external analysis results from PML file"));
 
-INITIALIZE_PASS(PMLImport, "pml-import", "PML Import", false, true)
+INITIALIZE_PASS(PMLImport, "patmos-pml-import", "Patmos PML Import", false, true)
 
 char PMLImport::ID = 0;
 
