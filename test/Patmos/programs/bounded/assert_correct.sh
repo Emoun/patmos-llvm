@@ -9,12 +9,8 @@
 #
 # usage:
 # It takes >= 6 arguments:
-#	1. The path to LLVM's binary folder. E.g. '$t-crest-home/llvm/build/bin'.
-#		May contain a '.'. If so, everything after (and including) the '.' is ignored.
-#		This allows the use of llvm-lit's substition, where 'llc' will give the correct path.
-#		I.e. llvm-lit will substitue 'llc' for '$t-crest-home/llvm/build/bin/./llc' which will work.
-#		The llvm binary folder must be exactly 3 levels below '$t-crest-home', otherwise the script
-#		will fail.
+#	1. The path to an LLVM binary, e.g., LLC.
+#		Doesn't matter which one, as it is only used to get path to the binary file directory.
 #	2. The path to the source program to test.
 #	3. The path to the temporary file available to the test.
 #	4. The path to the _start.ll to link with the test program
@@ -114,27 +110,28 @@ EndOfPython
 # Argument 3 is the execution arguments (see top of file for description).
 # Tests that the output of the program match the expected output. If not, reports an error.
 # Returns the cleaned statistics.
-execute_and_stat(){
+function execute_and_stat(){
 	# Split the execution argument into input and expected output.
 	
 	# We rename spaces such that they are not recognized as list separators when we split
 	# the input from the expected output
-	placeholder="<!!SPACE!!>"
-	no_space=${2// /$placeholder}
-	split=(${no_space//=/ })
+	local placeholder="<!!SPACE!!>"
+	local no_space=${2// /$placeholder}
+	local split=(${no_space//=/ })
 	
 	#We now reinsert the spaces
-	input=${split[0]//$placeholder/ }
-	expected_out=${split[1]//$placeholder/ }
+	local input=${split[0]//$placeholder/ }
+	local expected_out=${split[1]//$placeholder/ }
 	
 	# The final name of the ELF to execute
-	exec=$1_$input
+	local exec=$1_$input
 	
-	ret_code=0
+	local ret_code=0
 	
 	# Final generation of ELF with added input
 	patmos-ld -nostdlib -static -o $exec $1 --defsym input=$input
 	if [ $? -ne 0 ]; then
+		echo $2
 		echo "Failed to generate executable from '$1' for argument '$input'."
 		return 1
 	fi
@@ -203,13 +200,13 @@ fi
 
 # Takes the path to LLVM's build binaries and removes 
 # everything after (and including) the first '.'
-bin_dir=(${1//./ })
+bin_dir=$(dirname "$1")
 
 # The source file to test
 bitcode="$2"
 
-# The temporary file available to the test
-temp="$3"
+# The object file of the program
+compiled="$3"
 
 # The object file of the start function to be linked with the program
 start_function="$4"
@@ -220,11 +217,14 @@ llc_args="$5"
 # The first execution argument
 exec_arg="$6"
 
-# The object file of the program
-compiled="$temp"
+if [[ $llc_args == *"-mpatmos-singlepath="* ]]; then
+	using_singlepath=1
+else 
+	using_singlepath=0
+fi
 
 # Try to compile the program to rule out compile errors. Throw out the result.
-$bin_dir/llc $bitcode $llc_args -filetype=obj -mpatmos-singlepath=main -o $compiled
+$bin_dir/llc $bitcode $llc_args -filetype=obj -o $compiled
 if [ $? -ne 0 ]; then 
 	echo "Failed to compile '$bitcode'."
 	exit 1
@@ -238,7 +238,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Compile into object file (not ELF yet)
-$bin_dir/llc $compiled $llc_args -filetype=obj -mpatmos-singlepath=main -o $compiled
+$bin_dir/llc $compiled $llc_args -filetype=obj -o $compiled
 if [ $? -ne 0 ]; then 
 	echo "Failed to compile '$bitcode'."
 	exit 1
@@ -263,16 +263,18 @@ for i in "${@:7}"
 do
 	if [ $ret_code -ne 0 ] ; then
 		# If an error has already been encountered, stop.
-		continue
+		break
 	fi
 	rest_stats=$(execute_and_stat "$compiled" "$i")
 	if [ $? -ne 0 ]; then
 		# There was an error in executing the program or cleaning the stats
 		ret_code=1 
 	fi
-	if ! diff <(echo "$first_stats") <(echo "$rest_stats") ; then
-		echo "The execution of '$compiled' for execution arguments '$exec_arg' and '$i' weren't equivalent."
-		ret_code=1 
+	if [ $using_singlepath -ne 0 ] ; then
+		if ! diff <(echo "$first_stats") <(echo "$rest_stats") ; then
+			echo "The execution of '$compiled' for execution arguments '$exec_arg' and '$i' weren't equivalent."
+			ret_code=1 
+		fi
 	fi
 done
 

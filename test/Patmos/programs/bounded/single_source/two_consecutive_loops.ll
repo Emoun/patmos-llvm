@@ -1,5 +1,5 @@
-; RUN: %test_singlepath_execution -O2 0=0 1=0 4=2 10=7 18=11 20=14
-; RUN: %test_singlepath_execution "-O2 -mpatmos-disable-vliw=false" 0=0 1=0 4=2 10=7 18=11 20=14
+; RUN: EXEC_ARGS="0=0 1=0 4=2 10=7 18=11 20=14"; \
+; RUN: %test_execution
 ; END.
 ;//////////////////////////////////////////////////////////////////////////////////////////////////
 ; 
