@@ -157,26 +157,16 @@ loadRegFromStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
   DebugLoc DL;
   if (MI != MBB.end()) DL = MI->getDebugLoc();
 
-  MachineFunction &MF = *MBB.getParent();
-  MachineFrameInfo &MFI = *MF.getFrameInfo();
-  MachineMemOperand *MMO =
-  MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FrameIdx),
-                          MachineMemOperand::MOLoad,
-                          MFI.getObjectSize(FrameIdx),
-                          MFI.getObjectAlignment(FrameIdx));
-
   if (RC == &Patmos::RRegsRegClass) {
     AddDefaultPred(BuildMI(MBB, MI, DL, get(Patmos::LWC), DestReg))
-      .addFrameIndex(FrameIdx).addImm(0) // address
-      .addMemOperand(MMO);
+      .addFrameIndex(FrameIdx).addImm(0); // address
   }
   else if (RC == &Patmos::PRegsRegClass) {
     // Clients assume the last instruction inserted to be a load instruction.
     // Again, we work around this with a pseudo instruction that is expanded
     // during FrameIndex elimination.
     BuildMI(MBB, MI, DL, get(Patmos::PSEUDO_PREG_RELOAD), DestReg)
-      .addFrameIndex(FrameIdx).addImm(0) // address
-      .addMemOperand(MMO);
+      .addFrameIndex(FrameIdx).addImm(0); // address
   }
   else llvm_unreachable("Register class not handled!");
 }
