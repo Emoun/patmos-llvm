@@ -641,7 +641,7 @@ bool PatmosInstrInfo::advanceCycles(MachineBasicBlock &MBB,
   if (II != MBB.end()) {
     II = nextNonPseudo(MBB, II);
 
-    for (unsigned i = 0; i < Cycles && II != MBB.end(); i++)
+    for (unsigned i = 1; i < Cycles && II != MBB.end(); i++)
     {
       if (StopOnInlineAsm && II->isInlineAsm()) {
         // Should we stop on the last non-pseudo instruction instead?
