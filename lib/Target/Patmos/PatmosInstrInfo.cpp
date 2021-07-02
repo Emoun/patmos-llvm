@@ -637,14 +637,17 @@ bool PatmosInstrInfo::advanceCycles(MachineBasicBlock &MBB,
                                     MachineBasicBlock::iterator &II,
                                     unsigned Cycles, bool StopOnInlineAsm) const
 {
-  for (unsigned i = 0; i < Cycles && II != MBB.end(); i++) {
 
+  if (II != MBB.end()) {
     II = nextNonPseudo(MBB, II);
 
-    if (StopOnInlineAsm && II->isInlineAsm()) {
-      // Should we stop on the last non-pseudo instruction instead?
-      II++;
-      return false;
+    for (unsigned i = 0; i < Cycles && II != MBB.end(); i++, II = nextNonPseudo(MBB, II))
+    {
+      if (StopOnInlineAsm && II->isInlineAsm()) {
+        // Should we stop on the last non-pseudo instruction instead?
+        II++;
+        return false;
+      }
     }
   }
   return true;
